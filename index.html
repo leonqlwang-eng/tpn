@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>太平年·五代十国百题考</title>
+    <style>
+        /* --- 1. 全局古风样式设置 --- */
+        :root {
+            --paper-color: #f4e8d1; /* 宣纸黄 */
+            --ink-color: #2b2b2b;   /* 墨色 */
+            --red-seal: #b22222;    /* 印泥红 */
+            --wood-color: #5d4037;  /* 檀木色 */
+            --highlight: #8b0000;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--paper-color);
+            background-image: 
+                radial-gradient(#dccbb0 15%, transparent 16%),
+                radial-gradient(#dccbb0 15%, transparent 16%); /* 模拟纸张颗粒 */
+            background-size: 10px 10px;
+            font-family: "KaiTi", "STKaiti", "BiauKai", "Georgia", serif; /* 楷体优先 */
+            color: var(--ink-color);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 古风边框容器 */
+        .container {
+            width: 90%;
+            max-width: 480px;
+            height: 92vh;
+            border: 4px double var(--wood-color);
+            border-radius: 8px;
+            position: relative;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2) inset;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 装饰云纹 */
+        .corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--wood-color);
+            z-index: 1;
+        }
+        .top-left { top: 5px; left: 5px; border-right: none; border-bottom: none; }
+        .top-right { top: 5px; right: 5px; border-left: none; border-bottom: none; }
+        .bottom-left { bottom: 5px; left: 5px; border-right: none; border-top: none; }
+        .bottom-right { bottom: 5px; right: 5px; border-left: none; border-top: none; }
+
+        /* --- 2. 页面切换逻辑 --- */
+        .screen {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 3. 首页样式 --- */
+        h1.title {
+            font-size: 2.2rem;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            letter-spacing: 0.4rem;
+            border-left: 3px solid var(--red-seal);
+            padding-left: 15px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0px rgba(178, 34, 34, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            color: var(--wood-color);
+            font-weight: bold;
+        }
+
+        .btn {
+            background: transparent;
+            border: 2px solid var(--ink-color);
+            padding: 12px 35px;
+            font-size: 1.3rem;
+            font-family: inherit;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-top: 15px;
+            color: var(--ink-color);
+            font-weight: bold;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+        }
+
+        .btn:active {
+            background-color: var(--red-seal);
+            color: #fff;
+            border-color: var(--red-seal);
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        /* --- 4. 答题页样式 --- */
+        .progress-bar {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            border-bottom: 1px solid var(--wood-color);
+            padding-bottom: 10px;
+            color: var(--wood-color);
+        }
+
+        .question-box {
+            font-size: 1.25rem;
+            line-height: 1.5;
+            text-align: justify;
+            margin-bottom: 25px;
+            font-weight: bold;
+            flex-grow: 0;
+            min-height: 80px;
+        }
+
+        .options-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            max-height: 55vh;
+        }
+
+        .option-item {
+            padding: 14px;
+            border: 1px solid var(--wood-color);
+            background: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 1.05rem;
+            position: relative;
+            transition: background 0.2s;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .option-tag {
+            font-weight: bold;
+            margin-right: 10px;
+            color: var(--red-seal);
+            min-width: 20px;
+        }
+
+        /* --- 5. 结果页样式 --- */
+        .result-score {
+            font-size: 4.5rem;
+            color: var(--red-seal);
+            margin: 10px 0;
+            font-weight: bold;
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        .result-comment {
+            font-size: 1.2rem;
+            text-align: center;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            padding: 0 15px;
+        }
+
+        .tag-analysis {
+            font-size: 0.95rem;
+            color: var(--wood-color);
+            margin-bottom: 20px;
+            font-style: italic;
+            border-top: 1px dashed var(--wood-color);
+            padding-top: 10px;
+            width: 80%;
+            text-align: center;
+        }
+
+        .seal {
+            width: 90px;
+            height: 90px;
+            border: 3px solid var(--red-seal);
+            color: var(--red-seal);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.4rem;
+            border-radius: 4px;
+            transform: rotate(-12deg);
+            opacity: 0.9;
+            margin-bottom: 15px;
+            font-weight: bold;
+            background: rgba(178, 34, 34, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="corner top-left"></div>
+    <div class="corner top-right"></div>
+    <div class="corner bottom-left"></div>
+    <div class="corner bottom-right"></div>
+
+    <!-- 首页 -->
+    <div id="start-screen" class="screen active">
+        <h1 class="title">太平年<br>五代十国考</h1>
+        <div class="subtitle">一百题库 · 随机十问</div>
+        <button class="btn" onclick="startQuiz()">开卷有益</button>
+    </div>
+
+    <!-- 答题页 -->
+    <div id="quiz-screen" class="screen">
+        <div class="progress-bar">
+            第 <span id="current-num">1</span> / 10 题
+        </div>
+        <div class="question-box" id="question-text"></div>
+        <div class="options-list" id="options-container"></div>
+    </div>
+
+    <!-- 结果页 -->
+    <div id="result-screen" class="screen">
+        <div class="seal" id="result-seal"></div>
+        <div style="font-size: 0.9rem; margin-top:5px;">阁下本次得分</div>
+        <div class="result-score" id="score-display">0</div>
+        <div class="result-comment" id="comment-display"></div>
+        <div class="tag-analysis" id="tag-display"></div>
+        <button class="btn" onclick="restartQuiz()">再战乱世</button>
+    </div>
+</div>
+
+<script>
+    /*
+      数据结构: 
+      q: 题目
+      o: 选项数组 [A, B, C, D]
+      a: 正确答案索引 (0=A, 1=B, 2=C, 3=D)
+      c: 分类 (1:乱世背景, 2:吴越国, 3:大宋/赵匡胤, 4:文化/制作)
+    */
+    const questionBank = [
+        // --- 第一部分：乱世风云 (1-25) ---
+        {q: "电视剧《太平年》的故事主要发生在哪个历史时期？", o: ["春秋战国时期", "三国时期", "五代十国末期至北宋初年", "元末明初"], a: 2, c: 1},
+        {q: "“五代十国”中的“五代”不包括以下哪一个政权？", o: ["后梁", "后唐", "后晋", "后燕"], a: 3, c: 1},
+        {q: "五代十国时期，中原政权的都城大多设在何处？", o: ["长安（今西安）", "洛阳或汴州（今开封）", "建康（今南京）", "燕京（今北京）"], a: 1, c: 1},
+        {q: "剧中反映的那个时代，中国分裂局面是从哪个历史事件后形成的？", o: ["八王之乱", "安史之乱与藩镇割据", "靖康之耻", "土木堡之变"], a: 1, c: 1},
+        {q: "《太平年》剧名中的“太平”，在当时的历史语境下主要意味着什么？", o: ["经济高度繁荣", "文化百花齐放", "结束战乱，天下一统", "疆域扩张到最大"], a: 2, c: 1},
+        {q: "五代十国政权更迭频繁，哪个成语最适合形容这一时期？", o: ["走马观花", "沧海桑田", "城头变幻大王旗", "纸上谈兵"], a: 2, c: 1},
+        {q: "剧中出现的“十国”大多分布在中国的哪个地理区域？", o: ["东北地区", "西北地区", "南方地区", "华北平原"], a: 2, c: 1},
+        {q: "终结五代十国分裂局面，最终建立北宋政权的开国皇帝是谁？", o: ["柴荣", "赵匡胤", "赵光义", "李煜"], a: 1, c: 1},
+        {q: "五代建立后周政权，为北宋统一打下基础的杰出君主是？", o: ["郭威", "柴荣", "石敬瑭", "刘知远"], a: 1, c: 1},
+        {q: "后晋皇帝石敬瑭为了借兵，将哪一片重要的战略要地割让给了契丹？", o: ["河西走廊", "燕云十六州", "辽东半岛", "关中平原"], a: 1, c: 1},
+        {q: "“燕云十六州”的丢失对后世哪个朝代的边防造成了长期的致命威胁？", o: ["唐朝", "宋朝", "元朝", "清朝"], a: 1, c: 1},
+        {q: "乱世中军阀混战，武将专权。当时形容这种现象的俗语是？", o: ["天子宁有种乎，兵强马壮者为之尔", "王侯将相宁有种乎", "苍天已死，黄天当立", "莫须有"], a: 0, c: 1},
+        {q: "北宋建立的年份是哪一年？", o: ["907年", "960年", "979年", "1127年"], a: 1, c: 1},
+        {q: "在五代十国时期，契丹族建立的强大政权是？", o: ["辽", "金", "西夏", "蒙古"], a: 0, c: 1},
+        {q: "五代十国时期，社会动荡导致了大量的人口迁徙，主要方向是？", o: ["由南向北", "由北向南", "由东向西", "由西向东"], a: 1, c: 1},
+        {q: "下列哪一部史书是研究五代历史的最重要史料之一？", o: ["《史记》", "《汉书》", "《新五代史》", "《明史》"], a: 2, c: 1},
+        {q: "五代十国时期，哪一项技术得到了广泛应用和发展，促进了文化传播？", o: ["造纸术", "雕版印刷术", "活字印刷术", "指南针"], a: 1, c: 1},
+        {q: "剧中提及的“乱世终局”，标志着中国古代历史走向了哪个朝代的集权？", o: ["隋朝", "唐朝", "宋朝", "明朝"], a: 2, c: 1},
+        {q: "北宋初年，为了防止唐末五代以来的武将专政，采取了什么基本国策？", o: ["穷兵黩武", "崇文抑武", "闭关锁国", "和亲政策"], a: 1, c: 1},
+        {q: "剧中时期南方经济逐渐超过北方，这一进程被称为？", o: ["经济重心南移", "丝绸之路开辟", "摊丁入亩", "洋务运动"], a: 0, c: 1},
+        {q: "五代十国时期，哪一种文学体裁开始逐渐兴盛，并在宋代达到顶峰？", o: ["汉赋", "唐诗", "词", "元曲"], a: 2, c: 1},
+        {q: "后周世宗柴荣在位期间进行了多项改革，其中不包括？", o: ["澄清吏治", "废除科举", "灭佛兴学", "发展商业"], a: 1, c: 1},
+        {q: "五代十国的“十国”中，唯一一个地处北方的政权是？", o: ["前蜀", "南吴", "北汉", "南楚"], a: 2, c: 1},
+        {q: "剧中还原的“舂磨砦”反映了当时的什么悲惨现象？", o: ["赋税沉重", "军队以人为食的惨状", "酷刑泛滥", "瘟疫流行"], a: 1, c: 1},
+        {q: "能够准确概括《太平年》历史主旨的词语是？", o: ["争权夺利", "走向统一", "盛极而衰", "变法图强"], a: 1, c: 1},
+
+        // --- 第二部分：吴越国与纳土归宋 (26-50) ---
+        {q: "钱弘俶是十国中哪个国家的君主？", o: ["南唐", "吴越国", "闽国", "南汉"], a: 1, c: 2},
+        {q: "吴越国的建立者，也是钱弘俶的祖先是？", o: ["钱镠", "钱元瓘", "钱佐", "钱倧"], a: 0, c: 2},
+        {q: "吴越国的都城设在今天的哪座城市？", o: ["苏州", "杭州", "南京", "福州"], a: 1, c: 2},
+        {q: "吴越国在五代十国时期采取的基本国策是？", o: ["远交近攻", "善事中国（保境安民）", "闭关自守", "联辽抗宋"], a: 1, c: 2},
+        {q: "“纳土归宋”指的是谁将领土和平交给了宋朝？", o: ["李煜", "钱弘俶", "刘鋹", "孟昶"], a: 1, c: 2},
+        {q: "吴越国“纳土归宋”避免了什么悲惨结局？", o: ["国家破产", "生灵涂炭，战火波及江南", "外族入侵", "内部叛乱"], a: 1, c: 2},
+        {q: "钱镠遗训告诫子孙在遇到“真主”时应当如何？", o: ["殊死抵抗", "割据称帝", "纳土归降，不可兴兵", "逃亡海外"], a: 2, c: 2},
+        {q: "吴越国在统治期间，对杭州地区最大的水利贡献是？", o: ["开凿大运河", "修筑海塘", "治理黄河", "修建都江堰"], a: 1, c: 2},
+        {q: "杭州西湖边的“保俶塔”，与哪位历史人物的祈福有关？", o: ["苏轼", "钱弘俶", "岳飞", "白居易"], a: 1, c: 2},
+        {q: "钱弘俶纳土归宋后，被宋朝封为什么王？", o: ["楚王", "秦王", "吴越国王/邓王", "晋王"], a: 2, c: 2},
+        {q: "钱镠写给夫人的千古名句是？", o: ["执子之手", "陌上花开，可缓缓归矣", "两情若是久长时", "在天愿作比翼鸟"], a: 1, c: 2},
+        {q: "吴越国在文化和宗教上极力推崇哪一种信仰？", o: ["道教", "佛教", "伊斯兰教", "景教"], a: 1, c: 2},
+        {q: "宋太祖赵匡胤对纳土归宋的钱弘俶态度如何？", o: ["立即处死", "软禁虐待", "优待并赐予荣誉", "流放边疆"], a: 2, c: 2},
+        {q: "《百家姓》中“钱”姓排第二的主要历史原因是什么？", o: ["人口最多", "编纂者姓钱", "感念钱氏纳土归宋功绩", "随机排列"], a: 2, c: 2},
+        {q: "吴越国的版图大致相当于今天的哪个省份及周边地区？", o: ["浙江省", "广东省", "四川省", "湖南省"], a: 0, c: 2},
+        {q: "钱弘俶曾大量印造并藏于雷峰塔内的佛教文物是？", o: ["《金刚经》", "《宝箧印陀罗尼经》", "《法华经》", "《大藏经》"], a: 1, c: 2},
+        {q: "面对宋朝压力，南唐君主李煜选择了什么策略？", o: ["主动纳土", "称臣纳贡，但最终城破被俘", "远走高飞", "联合契丹"], a: 1, c: 2},
+        {q: "相较于南唐的战败，吴越国的“纳土归宋”被赞誉为？", o: ["忍辱偷生", "和平统一典范，保全江南", "卖国求荣", "迫不得已的妥协"], a: 1, c: 2},
+        {q: "钱氏家族统治吴越国近百年，被称为“三世几王”？", o: ["三世四王", "三世五王", "两世三王", "四世六王"], a: 1, c: 2},
+        {q: "电视剧中展现了吴越国繁荣的经济，其主要支柱是？", o: ["丝绸与海外贸易", "畜牧业", "煤炭开采", "棉花种植"], a: 0, c: 2},
+        {q: "赵匡胤派人接收吴越国时，钱弘俶的配合方式是？", o: ["交出所有户口、图籍和军队", "只交出图籍，保留军队", "要求宋军退出", "要求割地赔款"], a: 0, c: 2},
+        {q: "钱弘俶六十八岁生日宴离世，历史上对此的猜测多为？", o: ["战死沙场", "寿终正寝或被宋太宗毒杀", "遇刺身亡", "溺水而亡"], a: 1, c: 2},
+        {q: "《太平年》通过吴越国视角传达的最高历史智慧是？", o: ["宁为玉碎", "识时务，以民生为本，化干戈为玉帛", "狡兔死走狗烹", "胜者为王"], a: 1, c: 2},
+        {q: "吴越国的“保境安民”使得江南地区成为了什么？", o: ["荒无人烟", "主战场", "经济繁荣的避风港", "难民禁区"], a: 2, c: 2},
+        {q: "杭州的哪座著名古塔也是在钱弘俶统治时期修建的？", o: ["六和塔", "雷峰塔", "大雁塔", "铁塔"], a: 1, c: 2},
+
+        // --- 第三部分：大宋崛起与赵匡胤 (51-75) ---
+        {q: "赵匡胤在建立宋朝前担任后周的什么重要职务？", o: ["丞相", "殿前都点检", "枢密使", "节度使"], a: 1, c: 3},
+        {q: "赵匡胤是通过哪一场著名的兵变建立宋朝的？", o: ["玄武门之变", "马嵬坡之变", "陈桥兵变", "靖难之役"], a: 2, c: 3},
+        {q: "陈桥兵变中，将士们将什么颜色的衣服披在赵匡胤身上？", o: ["紫袍", "红袍", "黄袍", "黑袍"], a: 2, c: 3},
+        {q: "赵匡胤建立宋朝后，为了统一全国，采取了怎样的战略方针？", o: ["先北后南", "先南后北", "东西并进", "固守中原"], a: 1, c: 3},
+        {q: "赵匡胤为防将领篡位，导演了哪一场著名政治事件？", o: ["火烧庆功楼", "杯酒释兵权", "杀戮功臣", "指鹿为马"], a: 1, c: 3},
+        {q: "“杯酒释兵权”主要解除了哪些人的兵权？", o: ["地方藩镇", "禁军高级将领", "宰相", "契丹降将"], a: 1, c: 3},
+        {q: "赵匡胤建立的宋朝都城设在哪里？", o: ["长安", "洛阳", "东京汴梁（开封）", "临安"], a: 2, c: 3},
+        {q: "赵匡胤在位期间始终未能收复哪片领土，留下了遗憾？", o: ["江南地区", "岭南地区", "燕云十六州", "巴蜀地区"], a: 2, c: 3},
+        {q: "剧中赵匡胤的性格设定通常是？", o: ["残暴嗜杀", "懦弱无能", "宽仁大度，深谋远虑", "昏庸好色"], a: 2, c: 3},
+        {q: "消灭南唐时，赵匡胤对求和使者说出了哪句霸气之言？", o: ["卧榻之侧，岂容他人鼾睡", "犯我强汉者，虽远必诛", "顺我者昌", "朕即国家"], a: 0, c: 3},
+        {q: "赵匡胤死后，继承皇位的是谁？", o: ["赵德昭", "赵光义（宋太宗）", "养子", "小儿子"], a: 1, c: 3},
+        {q: "赵匡胤的突然离世在历史上留下了什么著名的千古之谜？", o: ["狸猫换太子", "烛影斧声", "靖康之耻", "夺门之变"], a: 1, c: 3},
+        {q: "《太平年》中，赵匡胤与钱弘俶的交锋主要体现在什么层面？", o: ["生死决斗", "政治智慧与对苍生责任感的碰撞", "商业贸易", "后宫联姻"], a: 1, c: 3},
+        {q: "北宋初年，赵匡胤设置了什么机构来分割宰相的军权？", o: ["三司", "枢密院", "御史台", "尚书省"], a: 1, c: 3},
+        {q: "赵匡胤为加强集权，设置了什么官职将地方财政收归中央？", o: ["通判", "转运使", "知州", "节度使"], a: 1, c: 3},
+        {q: "剧中北宋初年科举制度改革，最重要的一项是？", o: ["废除武举", "实行殿试，确立“天子门生”", "只考八股文", "允许女子参考"], a: 1, c: 3},
+        {q: "赵匡胤立下的“勒石之誓”，要求后代皇帝做到什么？", o: ["必须收复燕云", "不杀士大夫及上书言事人", "永不和亲", "重用宦官"], a: 1, c: 3},
+        {q: "赵匡胤年轻时曾有怎样的经历传说？", o: ["千里走单骑", "千里送京娘", "桃园三结义", "斩白蛇起义"], a: 1, c: 3},
+        {q: "赵匡胤的统一战争中，最先灭亡的是哪个十国政权？", o: ["南平（荆南）和武平", "后蜀", "南汉", "南唐"], a: 0, c: 3},
+        {q: "花蕊夫人写诗“十四万人齐解甲”，以此讽刺什么？", o: ["宋军太强大", "后蜀将士不战而降的怯懦", "天气太热", "武器太落后"], a: 1, c: 3},
+        {q: "宋军在攻灭南汉时，遇到了什么动物组成的军队？", o: ["象阵", "骑兵", "战车兵", "藤甲兵"], a: 0, c: 3},
+        {q: "赵匡胤称帝时，后周的最后一位小皇帝是？", o: ["柴荣", "柴宗训（周恭帝）", "郭威", "郭宗训"], a: 1, c: 3},
+        {q: "赵匡胤对待退位后的柴宗训母子态度如何？", o: ["斩草除根", "赐予丹书铁券，世代优待", "流放海外", "贬为庶人"], a: 1, c: 3},
+        {q: "大宋的统一进程体现了哪一种政治理念？", o: ["兵不血刃，以德服人与武力并重", "杀戮屠城", "羁縻统治", "分封诸侯"], a: 0, c: 3},
+        {q: "赵匡胤的庙号是“太祖”，通常意味着他？", o: ["功劳最大，开创基业", "在位最长", "年纪最大", "最注重文化"], a: 0, c: 3},
+
+        // --- 第四部分：剧集制作与文化 (76-100) ---
+        {q: "《太平年》在制作上号称采用了当时最先进的什么视觉技术？", o: ["3D技术", "VR技术", "8K超高清技术", "胶片拍摄"], a: 2, c: 4},
+        {q: "还原古代战败者投降时受到的侮辱性仪式叫什么？", o: ["负荆请罪", "牵羊礼", "三拜九叩", "割发代首"], a: 1, c: 4},
+        {q: "五代十国时期的人们在饮茶方面，主要盛行什么方式？", o: ["泡茶法", "煎茶与点茶法", "喝奶茶", "喝冷泡茶"], a: 1, c: 4},
+        {q: "北宋初年的城市街景，最可能不同于唐朝长安城的一点是？", o: ["打破坊市限制，出现夜市", "全是泥路", "没有外国人", "全是石屋"], a: 0, c: 4},
+        {q: "五代吴越国时期达到极高工艺水平，被称为“秘色瓷”的是？", o: ["青花瓷", "越窑青瓷", "汝窑天青釉", "唐三彩"], a: 1, c: 4},
+        {q: "钱弘俶在杭州的宫殿建筑风格，最可能体现了什么？", o: ["粗犷北方风格", "精致秀美的江南园林风格", "伊斯兰风格", "藏式风格"], a: 1, c: 4},
+        {q: "《太平年》通过展现政权覆灭，揭示了什么历史规律？", o: ["得民心者得天下", "武器先进就能赢", "地理位置决定一切", "钱多就能赢"], a: 0, c: 4},
+        {q: "北宋建立后，为了统一货币，发行的主要铜钱币种是？", o: ["开元通宝", "宋元通宝", "永乐通宝", "乾隆通宝"], a: 1, c: 4},
+        {q: "唐宋时期官服通常用什么来区分官员的品级高低？", o: ["衣服的颜色", "帽子的高度", "鞋子的材质", "腰带的重量"], a: 0, c: 4},
+        {q: "五代十国时期，百姓常被强行征调去服什么役？", o: ["夫役（沉重劳役）", "讲学", "炼丹", "采珠"], a: 0, c: 4},
+        {q: "后周世宗柴荣北伐契丹时，因何原因被迫班师回朝？", o: ["粮草断绝", "突发重病", "遭到伏击", "契丹投降"], a: 1, c: 4},
+        {q: "吴越国能够保持长期稳定的一个重要地理屏障是？", o: ["长江与钱塘江天险", "太行山脉", "喜马拉雅山脉", "沙漠"], a: 0, c: 4},
+        {q: "被称为“半部论语治天下”的赵匡胤谋士是？", o: ["赵普", "寇准", "范仲淹", "王安石"], a: 0, c: 4},
+        {q: "钱镠曾经为了抵御海潮，保护杭州城，留下了什么传说？", o: ["哪吒闹海", "钱王射潮", "精卫填海", "大禹治水"], a: 1, c: 4},
+        {q: "钱弘俶交出两浙版图，被后世哪个朝代的帝王高度评价？", o: ["明太祖", "清高宗乾隆", "汉武帝", "唐太宗"], a: 1, c: 4},
+        {q: "五代十国时期，南方（如西蜀、南唐）哪项艺术得到了保存发展？", o: ["绘画（如宫廷画、花鸟画）", "京剧", "相声", "油画"], a: 0, c: 4},
+        {q: "北宋初年的军队主力被称为？", o: ["八旗军", "禁军", "府兵", "绿营兵"], a: 1, c: 4},
+        {q: "电视剧《太平年》展现了中华民族历史发展的哪一个核心主题？", o: ["分裂是常态", "从分裂走向大一统的必然", "民族虚无", "封建迷信"], a: 1, c: 4},
+        {q: "五代时期，历经四朝十帝的不倒翁宰相是？", o: ["魏徵", "冯道", "严嵩", "和珅"], a: 1, c: 4},
+        {q: "赵匡胤修建“封桩库”的最初目的是？", o: ["修陵墓", "赎回燕云十六州", "赏赐后宫", "应对饥荒"], a: 1, c: 4},
+        {q: "吴越国钱氏家族留下的流传千古的家训是？", o: ["《颜氏家训》", "《钱氏家训》", "《朱子家训》", "《曾国藩家书》"], a: 1, c: 4},
+        {q: "南唐后主李煜名句“问君能有几多愁”的下一句是？", o: ["恰似一江春水向东流", "别是一般滋味在心头", "只是朱颜改", "故国不堪回首"], a: 0, c: 4},
+        {q: "剧中体现的“纳土归宋”发生在哪一年？", o: ["960年", "978年", "1000年", "1127年"], a: 1, c: 4},
+        {q: "五代十国的“十国”中，唯一建立在今天山西一带的政权是？", o: ["北汉", "前蜀", "南楚", "闽国"], a: 0, c: 4},
+        {q: "观看《太平年》，我们可以得到的最深刻现实启示是？", o: ["战争是唯一方式", "和平统一与百姓安康是共同期盼", "个人高于国家", "宿命论"], a: 1, c: 4}
+    ];
+
+    // --- 游戏逻辑 ---
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let userCategoryStats = { 1: 0, 2: 0, 3: 0, 4: 0 }; 
+
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    function startQuiz() {
+        score = 0;
+        currentIndex = 0;
+        userCategoryStats = { 1: 0, 2: 0, 3: 0, 4: 0 };
+        const shuffled = shuffle([...questionBank]);
+        currentQuestions = shuffled.slice(0, 10);
+        switchScreen('quiz-screen');
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = currentQuestions[currentIndex];
+        document.getElementById('current-num').textContent = currentIndex + 1;
+        document.getElementById('question-text').textContent = q.q;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = ''; 
+
+        q.o.forEach((optText, idx) => {
+            const div = document.createElement('div');
+            div.className = 'option-item';
+            const tag = String.fromCharCode(65 + idx); 
+            div.innerHTML = `<span class="option-tag">${tag}.</span>${optText}`;
+            div.onclick = () => handleOptionClick(idx, div);
+            container.appendChild(div);
+        });
+    }
+
+    function handleOptionClick(selectedIndex, element) {
+        const options = document.querySelectorAll('.option-item');
+        options.forEach(el => el.style.pointerEvents = 'none');
+
+        const currentQ = currentQuestions[currentIndex];
+        if (selectedIndex === currentQ.a) {
+            score += 10;
+            userCategoryStats[currentQ.c]++;
+        }
+
+        element.style.background = '#dccbb0';
+        element.style.borderColor = '#8b0000';
+
+        setTimeout(() => {
+            currentIndex++;
+            if (currentIndex < 10) {
+                renderQuestion();
+            } else {
+                showResult();
+            }
+        }, 250); // 快速跳转
+    }
+
+    function showResult() {
+        switchScreen('result-screen');
+        
+        const scoreDisplay = document.getElementById('score-display');
+        scoreDisplay.textContent = score;
+        
+        let tempScore = 0;
+        const timer = setInterval(() => {
+            if(tempScore >= score) clearInterval(timer);
+            else {
+                tempScore++;
+                scoreDisplay.textContent = tempScore;
+            }
+        }, 20);
+
+        const seal = document.getElementById('result-seal');
+        const comment = document.getElementById('comment-display');
+        const tagDisplay = document.getElementById('tag-display');
+        
+        let commentText = "";
+        let sealText = "";
+
+        if (score === 100) {
+            sealText = "盖世无双";
+            commentText = "阁下真乃神人也！对五代十国历史了如指掌，若生在当时，定能如赵普般“半部论语治天下”。建议立即前往剧组担任历史顾问！";
+        } else if (score >= 80) {
+            sealText = "学富五车";
+            commentText = "佩服！阁下博古通今，乱世风云在您眼中不过是过眼云烟。这段历史，您看得比编剧还透彻。";
+        } else if (score >= 60) {
+            sealText = "通晓文墨";
+            commentText = "及格了！看来电视剧《太平年》您是认真追了。虽偶有疏漏，但在乱世中保全性命、做个富家翁已是绰绰有余。";
+        } else if (score >= 30) {
+            sealText = "初出茅庐";
+            commentText = "这...阁下似乎对五代十国还不太熟。乱世凶险，建议您先去吴越国避一避，或者多刷两遍剧再来挑战。";
+        } else {
+            sealText = "尚需磨练";
+            commentText = "分数虽低，但勇气可嘉！想必阁下是刚从“舂磨砦”逃出来的？莫慌，胜败乃兵家常事，大侠请重新来过。";
+        }
+        
+        seal.textContent = sealText;
+
+        // 维度分析
+        let maxKey = Object.keys(userCategoryStats).reduce((a, b) => userCategoryStats[a] > userCategoryStats[b] ? a : b);
+        let maxVal = userCategoryStats[maxKey];
+
+        let specificComment = "";
+        if (maxVal > 0) { 
+            if (maxKey == 1) specificComment = "【乱世生存专家】：您对时代大背景洞若观火，大局观极强。";
+            if (maxKey == 2) specificComment = "【钱王知音】：陌上花开，您对吴越国的历史情有独钟，颇有江南雅气。";
+            if (maxKey == 3) specificComment = "【大宋栋梁】：看来您对赵大官人的文治武功颇有心得，是个做宰相的料。";
+            if (maxKey == 4) specificComment = "【博物君子】：您关注的点都在吃茶、瓷器和文化细节上，是个懂生活的雅人。";
+        }
+
+        comment.innerHTML = commentText;
+        tagDisplay.innerHTML = specificComment;
+    }
+
+    function switchScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function restartQuiz() {
+        switchScreen('start-screen');
+    }
+</script>
+</body>
+</html>
